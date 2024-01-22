@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import { connectToDatabase } from "./services/database.service";
 import { usersRouter } from "./routes/users.router";
 import { productsRouter } from "./routes/products.router";
+import { productsDetailRouter } from "./routes/productsdetail.router";
 
 const app = express();
 const cors = require("cors");
@@ -19,8 +20,9 @@ connectToDatabase()
       );
       next();
     });
-    app.use("/users", usersRouter);
-    app.use("/products", productsRouter);
+    app.use("/api/users", usersRouter);
+    app.use("/api/products", productsRouter);
+    app.use("/api/productsDetail", productsDetailRouter);
     app.use(bodyParser.json());
     app.use(cors());
     app.use(express.static("public"));
