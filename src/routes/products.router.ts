@@ -2,12 +2,12 @@
 import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
-import ProductsModel from "../models/products";
+import { ProductsModel } from "../models/products";
 // Global Config
 export const productsRouter = express.Router();
 productsRouter.use(express.json());
 // GET
-productsRouter.get("/", async (_req: Request, res: Response) => {
+productsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const result = (await collections
       .products!.find({})

@@ -1,10 +1,19 @@
 import { ObjectId } from "mongodb";
 
-export default class ProductsModel {
+export class ProductsModel {
   constructor(
     public name: string,
     public description: string,
     public lowest_price: number,
+    public image: string,
+    public category: string,
+    public id?: ObjectId
+  ) {}
+}
+
+export class CategoryModel {
+  constructor(
+    public name: string,
     public image: string,
     public id?: ObjectId
   ) {}
