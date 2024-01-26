@@ -9,10 +9,23 @@ productsRouter.use(express.json());
 // GET
 productsRouter.get("/", async (req: Request, res: Response) => {
   try {
+    const query: any = {};
+    if (req.query.name)
+      query["$or"] = [
+        {
+          name: {
+            $regex: new RegExp(`${req.query.name}`.replace(/\s/g, ""), "i"),
+          },
+        },
+        {
+          key: {
+            $regex: new RegExp(`${req.query.name}`.replace(/\s/g, ""), "i"),
+          },
+        },
+      ];
     const result = (await collections
-      .products!.find({})
+      .products!.find(query)
       .toArray()) as unknown as ProductsModel[];
-
     res.status(200).send(result);
   } catch (error: any) {
     res.status(500).send(error.message);
