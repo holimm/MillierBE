@@ -23,6 +23,7 @@ productsRouter.get("/", async (req: Request, res: Response) => {
           },
         },
       ];
+    if (req.query.category) query["category"] = req.query.category;
     const result = (await collections
       .products!.find(query)
       .toArray()) as unknown as ProductsModel[];
