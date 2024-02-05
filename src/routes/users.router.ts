@@ -57,6 +57,32 @@ usersRouter.post("/signin", async (req: Request, res: Response) => {
   }
 });
 
+usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
+  const id = req?.params?.id;
+  try {
+    const addressCreateData: UsersAddressUpdateModel =
+      req.body as UsersAddressUpdateModel;
+    const query = { _id: new ObjectId(id) };
+    const resultCreateAddress = await collections.users!.updateOne(query, {
+      $push: {
+        address: addressCreateData,
+      },
+    });
+    resultCreateAddress
+      ? res.status(200).send({
+          status: "success",
+          data: "Successfully created new address information",
+        })
+      : res.status(304).send({
+          status: "error",
+          data: "Address information not created",
+        });
+  } catch (error: any) {
+    console.error(error.message);
+    res.status(400).send(error.message);
+  }
+});
+
 usersRouter.get("/sessionSignIn", async (req: Request, res: Response) => {
   try {
     let [scheme, token]: any = req.headers.authorization?.split(" ");
@@ -178,6 +204,37 @@ usersRouter.put("/updateAddress/:id", async (req: Request, res: Response) => {
       : res.status(304).send({
           status: "error",
           data: "Address information not updated",
+        });
+  } catch (error: any) {
+    console.error(error.message);
+    res.status(400).send(error.message);
+  }
+});
+usersRouter.put("/deleteAddress/:id", async (req: Request, res: Response) => {
+  const id = req?.params?.id;
+  try {
+    const { index, ...informationUpdate }: UsersAddressUpdateModel =
+      req.body as UsersAddressUpdateModel;
+
+    const query = { _id: new ObjectId(id) };
+    const resultSetNullAddress = await collections.users!.updateOne(query, {
+      $unset: {
+        [`address.${index}`]: 1,
+      },
+    });
+    const resultUpdateAddress = await collections.users!.updateOne(query, {
+      $pull: {
+        address: null,
+      },
+    });
+    resultUpdateAddress
+      ? res.status(200).send({
+          status: "success",
+          data: "Successfully deleted address information",
+        })
+      : res.status(304).send({
+          status: "error",
+          data: "Address information not deleted",
         });
   } catch (error: any) {
     console.error(error.message);
