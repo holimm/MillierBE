@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 
 export const collections: {
   users?: mongoDB.Collection;
+  orders?: mongoDB.Collection;
   products?: mongoDB.Collection;
   productsdetail?: mongoDB.Collection;
   category?: mongoDB.Collection;
@@ -18,11 +19,13 @@ export const connectToDatabase = async () => {
   await client.connect();
   const db: mongoDB.Db = client.db(process.env.MONGODB_DATABASE!);
   const usersCollection: mongoDB.Collection = db.collection("users");
+  const ordersCollection: mongoDB.Collection = db.collection("orders");
   const productsCollection: mongoDB.Collection = db.collection("products");
   const categoryCollection: mongoDB.Collection = db.collection("category");
   const productsDetailCollection: mongoDB.Collection =
     db.collection("productsdetail");
   collections.users = usersCollection;
+  collections.orders = ordersCollection;
   collections.products = productsCollection;
   collections.productsdetail = productsDetailCollection;
   collections.category = categoryCollection;

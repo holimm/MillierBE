@@ -7,6 +7,7 @@ import { usersRouter } from "./routes/users.router";
 import { productsRouter } from "./routes/products.router";
 import { productsDetailRouter } from "./routes/productsdetail.router";
 import { categoryRouter } from "./routes/category.router";
+import { ordersRouter } from "./routes/orders.router";
 
 const app = express();
 const cors = require("cors");
@@ -23,6 +24,7 @@ connectToDatabase()
       next();
     });
     app.use("/api/users", usersRouter);
+    app.use("/api/orders", ordersRouter);
     app.use("/api/products", productsRouter);
     app.use("/api/category", categoryRouter);
     app.use("/api/productsDetail", productsDetailRouter);
