@@ -19,3 +19,20 @@ export class CategoryModel {
     public id?: ObjectId
   ) {}
 }
+
+export class ProductColorType {
+  constructor(
+    public color?: string,
+    public label?: string,
+    public image?: string,
+    public lowercase?: string
+  ) {}
+}
+
+export class ProductStorageType {
+  public constructor(
+    public capacity?: number,
+    public unit?: string,
+    public price?: number
+  ) {}
+}
