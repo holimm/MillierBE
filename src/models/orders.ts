@@ -28,7 +28,11 @@ export class CheckoutFormAddressType {
 
 export class OrderDateType {
   constructor(
-    public id?: "dateOrder" | "dateDelivered",
+    public id?:
+      | "dateOrder"
+      | "dateDelivering"
+      | "dateDelivered"
+      | "dateCancelled",
     public dateString?: string
   ) {}
 }
