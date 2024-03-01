@@ -37,7 +37,7 @@ usersRouter.post("/signin", async (req: Request, res: Response) => {
         if (result) {
           res.status(200).send({
             status: "success",
-            data: resultUser,
+            data: { ...resultUser, remember: req.body.remember },
           });
         } else {
           res.status(200).send({

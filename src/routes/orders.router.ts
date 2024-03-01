@@ -2,6 +2,8 @@
 import express, { Request, Response } from "express";
 import { collections } from "../services/database.service";
 import { OrderInformationType } from "../models/orders";
+import { ObjectId } from "mongodb";
+import dayjs from "dayjs";
 // Global Config
 export const ordersRouter = express.Router();
 ordersRouter.use(express.json());
@@ -46,4 +48,33 @@ ordersRouter.post("/create", async (req: Request, res: Response) => {
 });
 
 // PUT
+ordersRouter.put("/cancelOrder/:id", async (req: Request, res: Response) => {
+  try {
+    const { idOrder }: { idOrder: string } = req.body as { idOrder: string };
+    const query = { _id: new ObjectId(idOrder) };
+    const resultUpdateAddress = await collections.orders!.updateOne(query, {
+      $push: {
+        [`date`]: {
+          id: "dateCancelled",
+          dateString: dayjs().format(),
+        },
+      },
+      $set: {
+        status: "Cancelled",
+      },
+    });
+    resultUpdateAddress
+      ? res.status(200).send({
+          status: "success",
+          data: "Successfully cancelled order",
+        })
+      : res.status(304).send({
+          status: "error",
+          data: "Order not cancelled",
+        });
+  } catch (error: any) {
+    console.error(error.message);
+    res.status(400).send(error.message);
+  }
+});
 // DELETE
