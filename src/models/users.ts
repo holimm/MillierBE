@@ -2,12 +2,12 @@ import { ObjectId } from "mongodb";
 
 export class UsersAddressUpdateModel {
   constructor(
-    public type: string,
-    public phone: string,
-    public street: string,
-    public district: string,
-    public ward: string,
-    public city: string,
+    public type?: string,
+    public phone?: string,
+    public street?: string,
+    public district?: string,
+    public ward?: string,
+    public city?: string,
     public index?: number
   ) {}
 }
@@ -39,5 +39,18 @@ export class UsersInformationUpdateModel {
     public name: string,
     public phone: string,
     public id?: ObjectId
+  ) {}
+}
+
+export class RegisterAccountModel {
+  constructor(
+    public name?: string,
+    public username?: string,
+    public password?: string,
+    public confirm_password?: string,
+    public email?: string,
+    public phone?: string,
+    public address?: UsersAddressUpdateModel[],
+    public token?: string
   ) {}
 }

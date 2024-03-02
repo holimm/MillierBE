@@ -3,13 +3,16 @@ import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
 import {
+  RegisterAccountModel,
   UsersAddressUpdateModel,
   UsersInformationUpdateModel,
   UsersModel,
   UsersPasswordUpdateModel,
 } from "../models/users";
 import bcrypt from "bcrypt";
-import { isEmpty, result } from "lodash";
+import { isEmpty, result, toString } from "lodash";
+import { generateUUIDToken } from "../helpers/commonHelpers";
+import { sendEmailRegisterAccount } from "../helpers/sendEmail";
 // Global Config
 export const usersRouter = express.Router();
 usersRouter.use(express.json());
@@ -23,6 +26,26 @@ usersRouter.get("/", async (req: Request, res: Response) => {
     console.log(result);
     res.status(200).send(result);
   } catch (error: any) {
+    res.status(500).send(error.message);
+  }
+});
+usersRouter.get("/sessionSignIn", async (req: Request, res: Response) => {
+  try {
+    let [scheme, token]: any = req.headers.authorization?.split(" ");
+    switch (scheme) {
+      case "Bearer":
+        const resultUser = (await collections.users!.findOne({
+          token: token,
+        })) as unknown as UsersModel[];
+        res.status(200).send({
+          status: "success",
+          data: resultUser,
+        });
+        break;
+    }
+    // res.status(200).send("Test");
+  } catch (error: any) {
+    console.log(error);
     res.status(500).send(error.message);
   }
 });
@@ -56,7 +79,93 @@ usersRouter.post("/signin", async (req: Request, res: Response) => {
     res.status(500).send(error.message);
   }
 });
-
+usersRouter.post("/createAccount", async (req: Request, res: Response) => {
+  try {
+    let { confirm_password, ...addressCreateData }: RegisterAccountModel =
+      req.body as RegisterAccountModel;
+    const resultUser = (await collections.users!.findOne({
+      username: addressCreateData.username,
+    })) as unknown as UsersModel[];
+    if (isEmpty(resultUser)) {
+      addressCreateData.password = toString(
+        await bcrypt.hash(toString(addressCreateData.password), 14)
+      );
+      const resultCreateAddress = await collections.users!.insertOne({
+        ...addressCreateData,
+        address: [],
+        token: toString(
+          await bcrypt.hash(toString(addressCreateData.username), 10)
+        ),
+      });
+      resultCreateAddress
+        ? res.status(200).send({
+            status: "success",
+            data: "Successfully created new account",
+          })
+        : res.status(200).send({
+            status: "error",
+            data: "Account not created",
+          });
+    } else {
+      res.status(200).send({
+        status: "error",
+        data: "Your username existed in database",
+      });
+    }
+  } catch (error: any) {
+    res.status(400).send({ status: "error", data: error.message });
+  }
+});
+usersRouter.post("/sendVerifyEmail", async (req: Request, res: Response) => {
+  try {
+    let registerAccountData: RegisterAccountModel =
+      req.body as RegisterAccountModel;
+    const resultUser = (await collections.users!.findOne({
+      username: registerAccountData.username,
+    })) as unknown as UsersModel[];
+    if (isEmpty(resultUser)) {
+      const generateToken = generateUUIDToken();
+      registerAccountData.password = toString(
+        await bcrypt.hash(toString(registerAccountData.password), 14)
+      );
+      const isSentEmail = await sendEmailRegisterAccount({
+        to: registerAccountData.email,
+        subject: "Millier Email Verification",
+        text: `Hello, Thank you for signing up with our service!<br> 
+        To complete your registration, please verify your email address by clicking the link below:<br>
+        Verification Link: http://localhost:3034/verify-email?token=${generateToken}<br>
+        If you did not sign up for our service, you can safely ignore this email.<br>
+        Best regards,<br>Millier`,
+        html: `
+        <p>Hello,</p>
+        <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
+        <p><a href="http://localhost:3034/verify-email?token=${generateToken}">Verification Link</a></p>
+        <p>If you did not sign up for our service, you can safely ignore this email.</p>
+        <p>Best regards,<br>Millier</p>`,
+      });
+      isSentEmail
+        ? res.status(200).send({
+            ...registerAccountData,
+            address: [],
+            token: toString(
+              await bcrypt.hash(toString(registerAccountData.username), 10)
+            ),
+            emailVerifyToken: generateToken,
+          })
+        : res.status(200).send({
+            status: "error",
+            data: "There was an error when sending email",
+          });
+    } else {
+      res.status(200).send({
+        status: "error",
+        data: "Your username existed in database",
+      });
+    }
+  } catch (error: any) {
+    res.status(400).send({ status: "error", data: error.message });
+  }
+});
 usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
   const id = req?.params?.id;
   try {
@@ -73,34 +182,13 @@ usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
           status: "success",
           data: "Successfully created new address information",
         })
-      : res.status(304).send({
+      : res.status(200).send({
           status: "error",
           data: "Address information not created",
         });
   } catch (error: any) {
     console.error(error.message);
     res.status(400).send(error.message);
-  }
-});
-
-usersRouter.get("/sessionSignIn", async (req: Request, res: Response) => {
-  try {
-    let [scheme, token]: any = req.headers.authorization?.split(" ");
-    switch (scheme) {
-      case "Bearer":
-        const resultUser = (await collections.users!.findOne({
-          token: token,
-        })) as unknown as UsersModel[];
-        res.status(200).send({
-          status: "success",
-          data: resultUser,
-        });
-        break;
-    }
-    // res.status(200).send("Test");
-  } catch (error: any) {
-    console.log(error);
-    res.status(500).send(error.message);
   }
 });
 // PUT
