@@ -21,6 +21,9 @@ export class UsersModel {
     public token: string,
     public phone: string,
     public address: UsersAddressUpdateModel[],
+    public emailVerifyToken: string,
+    public verifyTokenExpireDate: string,
+    public statusVerify: boolean,
     public id?: ObjectId
   ) {}
 }
@@ -28,8 +31,8 @@ export class UsersModel {
 export class UsersPasswordUpdateModel {
   constructor(
     public old_password: string,
-    public new_password: string,
-    public new_password_confirm: string,
+    public password: string,
+    public password_confirm: string,
     public id?: ObjectId
   ) {}
 }
@@ -53,4 +56,8 @@ export class RegisterAccountModel {
     public address?: UsersAddressUpdateModel[],
     public token?: string
   ) {}
+}
+
+export class ForgotPasswordAccountModel {
+  constructor(public email?: string) {}
 }

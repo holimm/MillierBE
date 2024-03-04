@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
 import {
+  ForgotPasswordAccountModel,
   RegisterAccountModel,
   UsersAddressUpdateModel,
   UsersInformationUpdateModel,
@@ -13,6 +14,7 @@ import bcrypt from "bcrypt";
 import { isEmpty, result, toString } from "lodash";
 import { generateUUIDToken } from "../helpers/commonHelpers";
 import { sendEmailRegisterAccount } from "../helpers/sendEmail";
+import dayjs from "dayjs";
 // Global Config
 export const usersRouter = express.Router();
 usersRouter.use(express.json());
@@ -79,49 +81,61 @@ usersRouter.post("/signin", async (req: Request, res: Response) => {
     res.status(500).send(error.message);
   }
 });
-usersRouter.post("/createAccount", async (req: Request, res: Response) => {
+usersRouter.post("/verifyUserAccount", async (req: Request, res: Response) => {
   try {
-    let { confirm_password, ...addressCreateData }: RegisterAccountModel =
-      req.body as RegisterAccountModel;
-    const resultUser = (await collections.users!.findOne({
-      username: addressCreateData.username,
-    })) as unknown as UsersModel[];
-    if (isEmpty(resultUser)) {
-      addressCreateData.password = toString(
-        await bcrypt.hash(toString(addressCreateData.password), 14)
-      );
-      const resultCreateAddress = await collections.users!.insertOne({
-        ...addressCreateData,
-        address: [],
-        token: toString(
-          await bcrypt.hash(toString(addressCreateData.username), 10)
-        ),
-      });
-      resultCreateAddress
-        ? res.status(200).send({
-            status: "success",
-            data: "Successfully created new account",
-          })
-        : res.status(200).send({
-            status: "error",
-            data: "Account not created",
-          });
+    let query = req.body as {
+      emailVerifyToken: string;
+    };
+    const resultUser = (await collections.users!.findOne(
+      query
+    )) as unknown as UsersModel;
+    if (!isEmpty(resultUser)) {
+      if (dayjs().isBefore(dayjs(resultUser.verifyTokenExpireDate))) {
+        const resultCreateAddress = await collections.users!.updateOne(query, {
+          $set: {
+            emailVerifyToken: "",
+            verifyTokenExpireDate: "",
+            statusVerify: true,
+          },
+        });
+        resultCreateAddress
+          ? res.status(200).send({
+              status: "success",
+              data: `Congratulations! Your email has been successfully verified. You're now a verified member of our community.`,
+            })
+          : res.status(200).send({
+              status: "error",
+              data: "Sorry, Your email verification has been rejected.",
+            });
+      } else {
+        res.status(200).send({
+          status: "error",
+          data: "Your verification link has expired",
+        });
+      }
     } else {
       res.status(200).send({
         status: "error",
-        data: "Your username existed in database",
+        data: "Your verification token not existed",
       });
     }
   } catch (error: any) {
     res.status(400).send({ status: "error", data: error.message });
   }
 });
-usersRouter.post("/sendVerifyEmail", async (req: Request, res: Response) => {
+usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
   try {
     let registerAccountData: RegisterAccountModel =
       req.body as RegisterAccountModel;
     const resultUser = (await collections.users!.findOne({
-      username: registerAccountData.username,
+      $or: [
+        {
+          username: registerAccountData.username,
+        },
+        {
+          email: registerAccountData.email,
+        },
+      ],
     })) as unknown as UsersModel[];
     if (isEmpty(resultUser)) {
       const generateToken = generateUUIDToken();
@@ -134,23 +148,31 @@ usersRouter.post("/sendVerifyEmail", async (req: Request, res: Response) => {
         text: `Hello, Thank you for signing up with our service!<br> 
         To complete your registration, please verify your email address by clicking the link below:<br>
         Verification Link: http://localhost:3034/verify-email?token=${generateToken}<br>
+        The email verification link will expire in 1 hour<br>
         If you did not sign up for our service, you can safely ignore this email.<br>
         Best regards,<br>Millier`,
         html: `
         <p>Hello,</p>
         <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
         <p><a href="http://localhost:3034/verify-email?token=${generateToken}">Verification Link</a></p>
+        <p>The email verification link will expire in 1 hour.</p>
         <p>If you did not sign up for our service, you can safely ignore this email.</p>
         <p>Best regards,<br>Millier</p>`,
       });
-      isSentEmail
+      const resultCreateAddress = await collections.users!.insertOne({
+        ...registerAccountData,
+        address: [],
+        token: toString(
+          await bcrypt.hash(toString(registerAccountData.username), 10)
+        ),
+        statusVerify: false,
+        verifyTokenExpireDate: dayjs().add(1, "hour").format(),
+        emailVerifyToken: generateToken,
+      });
+      isSentEmail && resultCreateAddress
         ? res.status(200).send({
-            ...registerAccountData,
-            address: [],
-            token: toString(
-              await bcrypt.hash(toString(registerAccountData.username), 10)
-            ),
-            emailVerifyToken: generateToken,
+            status: "success",
+            data: "Waiting to verify email",
           })
         : res.status(200).send({
             status: "error",
@@ -159,13 +181,119 @@ usersRouter.post("/sendVerifyEmail", async (req: Request, res: Response) => {
     } else {
       res.status(200).send({
         status: "error",
-        data: "Your username existed in database",
+        data: "Your username or email already existed",
       });
     }
   } catch (error: any) {
     res.status(400).send({ status: "error", data: error.message });
   }
 });
+usersRouter.post(
+  "/sendEmailResetPassword",
+  async (req: Request, res: Response) => {
+    try {
+      let accountData: ForgotPasswordAccountModel =
+        req.body as ForgotPasswordAccountModel;
+      const resultUser = (await collections.users!.findOne({
+        email: accountData.email,
+      })) as unknown as UsersModel;
+      if (!isEmpty(resultUser)) {
+        const generateToken = generateUUIDToken();
+        const query = { email: accountData.email };
+        const isSentEmail = await sendEmailRegisterAccount({
+          to: accountData.email,
+          subject: "Reset Your Millier Account Password",
+          text: `We noticed that you've requested to reset your account password.<br> 
+        Your reset password link: http://localhost:3034/reset-password?token=${generateToken}<br>
+        If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.<br>
+        For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.<br>
+        Thank you,<br>Millier`,
+          html: `
+        <p>We noticed that you've requested to reset your account password.</p>
+        <p><a href="http://localhost:3034/reset-password?token=${generateToken}">Reset Password Link</a></p>
+        <p>If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.</p>
+        <p>For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.</p>
+        <p>Thank you,<br>Millier</p>`,
+        });
+        const resultResetPasswordToken = await collections.users!.updateOne(
+          query,
+          {
+            $set: {
+              verifyTokenExpireDate: dayjs().add(1, "hour").format(),
+              emailVerifyToken: generateToken,
+            },
+          }
+        );
+        isSentEmail && resultResetPasswordToken
+          ? res.status(200).send({
+              status: "success",
+              data: "Waiting to verify email",
+            })
+          : res.status(200).send({
+              status: "error",
+              data: "There was an error when sending email",
+            });
+      } else {
+        res.status(200).send({
+          status: "error",
+          data: "Email not existed in database",
+        });
+      }
+    } catch (error: any) {
+      res.status(400).send({ status: "error", data: error.message });
+    }
+  }
+);
+usersRouter.post(
+  "/verifyResetPassword",
+  async (req: Request, res: Response) => {
+    try {
+      let query = {
+        emailVerifyToken: req.body.emailVerifyToken,
+      };
+      const resultUser = (await collections.users!.findOne(
+        query
+      )) as unknown as UsersModel;
+      if (!isEmpty(resultUser)) {
+        if (dayjs().isBefore(dayjs(resultUser.verifyTokenExpireDate))) {
+          const resultCreateAddress = await collections.users!.updateOne(
+            query,
+            {
+              $set: {
+                password: toString(
+                  await bcrypt.hash(toString(req.body.password), 14)
+                ),
+                emailVerifyToken: "",
+                verifyTokenExpireDate: "",
+              },
+            }
+          );
+          resultCreateAddress
+            ? res.status(200).send({
+                status: "success",
+                data: `Your password has changed`,
+              })
+            : res.status(200).send({
+                status: "error",
+                data: "Sorry, Your reset email ticket has been rejected.",
+              });
+        } else {
+          res.status(200).send({
+            status: "error",
+            data: "Your reset password link has expired",
+          });
+        }
+      } else {
+        res.status(200).send({
+          status: "error",
+          data: "Your verification token not existed",
+        });
+      }
+    } catch (error: any) {
+      res.status(400).send({ status: "error", data: error.message });
+    }
+  }
+);
 usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
   const id = req?.params?.id;
   try {
@@ -212,7 +340,7 @@ usersRouter.put("/updatePassword/:id", async (req: Request, res: Response) => {
               query,
               {
                 $set: {
-                  password: await bcrypt.hash(passwordUpdate.new_password, 14),
+                  password: await bcrypt.hash(passwordUpdate.password, 14),
                 },
               }
             );
