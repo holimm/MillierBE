@@ -126,6 +126,7 @@ usersRouter.post("/verifyUserAccount", async (req: Request, res: Response) => {
 });
 usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
   try {
+    const generateToken = generateUUIDToken();
     let registerAccountData: RegisterAccountModel =
       req.body as RegisterAccountModel;
     const resultUser = (await collections.users!.findOne({
@@ -137,9 +138,8 @@ usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
           email: registerAccountData.email,
         },
       ],
-    })) as unknown as UsersModel[];
+    })) as unknown as UsersModel;
     if (isEmpty(resultUser)) {
-      const generateToken = generateUUIDToken();
       registerAccountData.password = toString(
         await bcrypt.hash(toString(registerAccountData.password), 14)
       );
@@ -180,10 +180,63 @@ usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
             data: "There was an error when sending email",
           });
     } else {
-      res.status(200).send({
-        status: "error",
-        data: "Your username or email already existed",
-      });
+      if (!resultUser.statusVerify) {
+        if (!dayjs().isBefore(dayjs(resultUser.verifyTokenExpireDate))) {
+          const query = { email: registerAccountData.email };
+          registerAccountData.password = toString(
+            await bcrypt.hash(toString(registerAccountData.password), 14)
+          );
+          const isSentEmail = await sendEmailRegisterAccount({
+            to: registerAccountData.email,
+            subject: "Millier Email Verification",
+            text: `Hello, Thank you for signing up with our service!<br> 
+            To complete your registration, please verify your email address by clicking the link below:<br>
+            Verification Link: http://localhost:3034/verify-email?token=${generateToken}<br>
+            The email verification link will expire in 1 hour<br>
+            If you did not sign up for our service, you can safely ignore this email.<br>
+            Best regards,<br>Millier`,
+            html: `
+            <p>Hello,</p>
+            <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
+            <p><a href="http://localhost:3034/verify-email?token=${generateToken}">Verification Link</a></p>
+            <p>The email verification link will expire in 1 hour.</p>
+            <p>If you did not sign up for our service, you can safely ignore this email.</p>
+            <p>Best regards,<br>Millier</p>`,
+          });
+          const resultCreateAddress = await collections.users!.updateOne(
+            query,
+            {
+              ...registerAccountData,
+              address: [],
+              token: toString(
+                await bcrypt.hash(toString(registerAccountData.username), 10)
+              ),
+              statusVerify: false,
+              verifyTokenExpireDate: dayjs().add(1, "hour").format(),
+              emailVerifyToken: generateToken,
+            }
+          );
+          isSentEmail && resultCreateAddress
+            ? res.status(200).send({
+                status: "success",
+                data: "Waiting to verify email",
+              })
+            : res.status(200).send({
+                status: "error",
+                data: "There was an error when sending email",
+              });
+        } else {
+          res.status(200).send({
+            status: "error",
+            data: "The verification link tied with this email hasn't expired yet",
+          });
+        }
+      } else {
+        res.status(200).send({
+          status: "error",
+          data: "Your username or email already existed",
+        });
+      }
     }
   } catch (error: any) {
     res.status(400).send({ status: "error", data: error.message });
@@ -199,41 +252,55 @@ usersRouter.post(
         email: accountData.email,
       })) as unknown as UsersModel;
       if (!isEmpty(resultUser)) {
-        const generateToken = generateUUIDToken();
-        const query = { email: accountData.email };
-        const isSentEmail = await sendEmailRegisterAccount({
-          to: accountData.email,
-          subject: "Reset Your Millier Account Password",
-          text: `We noticed that you've requested to reset your account password.<br> 
+        if (resultUser.statusVerify) {
+          if (!dayjs().isBefore(dayjs(resultUser.verifyTokenExpireDate))) {
+            const generateToken = generateUUIDToken();
+            const query = { email: accountData.email };
+            const isSentEmail = await sendEmailRegisterAccount({
+              to: accountData.email,
+              subject: "Reset Your Millier Account Password",
+              text: `We noticed that you've requested to reset your account password.<br> 
         Your reset password link: http://localhost:3034/reset-password?token=${generateToken}<br>
         If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.<br>
         For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.<br>
         Thank you,<br>Millier`,
-          html: `
+              html: `
         <p>We noticed that you've requested to reset your account password.</p>
         <p><a href="http://localhost:3034/reset-password?token=${generateToken}">Reset Password Link</a></p>
         <p>If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.</p>
         <p>For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.</p>
         <p>Thank you,<br>Millier</p>`,
-        });
-        const resultResetPasswordToken = await collections.users!.updateOne(
-          query,
-          {
-            $set: {
-              verifyTokenExpireDate: dayjs().add(1, "hour").format(),
-              emailVerifyToken: generateToken,
-            },
-          }
-        );
-        isSentEmail && resultResetPasswordToken
-          ? res.status(200).send({
-              status: "success",
-              data: "Waiting to verify email",
-            })
-          : res.status(200).send({
-              status: "error",
-              data: "There was an error when sending email",
             });
+            const resultResetPasswordToken = await collections.users!.updateOne(
+              query,
+              {
+                $set: {
+                  verifyTokenExpireDate: dayjs().add(1, "hour").format(),
+                  emailVerifyToken: generateToken,
+                },
+              }
+            );
+            isSentEmail && resultResetPasswordToken
+              ? res.status(200).send({
+                  status: "success",
+                  data: "Waiting to verify email",
+                })
+              : res.status(200).send({
+                  status: "error",
+                  data: "There was an error when sending email",
+                });
+          } else {
+            res.status(200).send({
+              status: "error",
+              data: "The verification link tied with this email hasn't expired yet",
+            });
+          }
+        } else {
+          res.status(200).send({
+            status: "error",
+            data: "The account link with this email hasn't verified",
+          });
+        }
       } else {
         res.status(200).send({
           status: "error",
@@ -327,6 +394,7 @@ usersRouter.post("/googleLogin", async (req: Request, res: Response) => {
     const resultUser = (await collections.users!.findOne(
       query
     )) as unknown as UsersModel;
+    console.group(resultUser);
     if (!isEmpty(resultUser)) {
       resultUser
         ? res.status(200).send({
