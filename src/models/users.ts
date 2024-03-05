@@ -61,3 +61,27 @@ export class RegisterAccountModel {
 export class ForgotPasswordAccountModel {
   constructor(public email?: string) {}
 }
+
+export class GoogleLoginCodeResponseType {
+  constructor(
+    public access_token?: string,
+    public authuser?: string,
+    public expires_in?: number,
+    public prompt?: string,
+    public scope?: string,
+    public token_type?: string
+  ) {}
+}
+
+export class GoogleProfileType {
+  constructor(
+    public email?: string,
+    public family_name?: string,
+    public given_name?: string,
+    public id?: string,
+    public locale?: string,
+    public name?: string,
+    public picture?: string,
+    public verified_email?: boolean
+  ) {}
+}

@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
 import {
   ForgotPasswordAccountModel,
+  GoogleProfileType,
   RegisterAccountModel,
   UsersAddressUpdateModel,
   UsersInformationUpdateModel,
@@ -314,6 +315,34 @@ usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
           status: "error",
           data: "Address information not created",
         });
+  } catch (error: any) {
+    console.error(error.message);
+    res.status(400).send(error.message);
+  }
+});
+usersRouter.post("/googleLogin", async (req: Request, res: Response) => {
+  try {
+    const addressCreateData: GoogleProfileType = req.body as GoogleProfileType;
+    const query = { email: addressCreateData.email };
+    const resultUser = (await collections.users!.findOne(
+      query
+    )) as unknown as UsersModel;
+    if (!isEmpty(resultUser)) {
+      resultUser
+        ? res.status(200).send({
+            status: "success",
+            data: resultUser,
+          })
+        : res.status(200).send({
+            status: "error",
+            data: "Error getting account information",
+          });
+    } else {
+      res.status(200).send({
+        status: "error",
+        data: "Your email not existed",
+      });
+    }
   } catch (error: any) {
     console.error(error.message);
     res.status(400).send(error.message);
