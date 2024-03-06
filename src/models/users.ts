@@ -39,9 +39,12 @@ export class UsersPasswordUpdateModel {
 
 export class UsersInformationUpdateModel {
   constructor(
-    public name: string,
-    public phone: string,
-    public id?: ObjectId
+    public name?: string,
+    public username?: string,
+    public phone?: string,
+    public id?: ObjectId,
+    public password?: string,
+    public password_confirm?: string
   ) {}
 }
 

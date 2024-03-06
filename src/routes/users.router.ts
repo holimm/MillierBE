@@ -389,8 +389,8 @@ usersRouter.post("/createAddress/:id", async (req: Request, res: Response) => {
 });
 usersRouter.post("/googleLogin", async (req: Request, res: Response) => {
   try {
-    const addressCreateData: GoogleProfileType = req.body as GoogleProfileType;
-    const query = { email: addressCreateData.email };
+    const googleProfileData: GoogleProfileType = req.body as GoogleProfileType;
+    const query = { email: googleProfileData.email };
     const resultUser = (await collections.users!.findOne(
       query
     )) as unknown as UsersModel;
@@ -406,10 +406,30 @@ usersRouter.post("/googleLogin", async (req: Request, res: Response) => {
             data: "Error getting account information",
           });
     } else {
-      res.status(200).send({
-        status: "error",
-        data: "Your email not existed",
-      });
+      const dataUser = {
+        name: googleProfileData.name,
+        username: "",
+        email: googleProfileData.email,
+        phone: "",
+        password: "",
+        address: [],
+        token: toString(
+          await bcrypt.hash(toString(googleProfileData.email), 10)
+        ),
+        statusVerify: true,
+        verifyTokenExpireDate: "",
+        emailVerifyToken: "",
+      };
+      const resultCreateAddress = await collections.users!.insertOne(dataUser);
+      resultCreateAddress
+        ? res.status(200).send({
+            status: "success",
+            data: dataUser,
+          })
+        : res.status(200).send({
+            status: "error",
+            data: "Error while trying to sign in using Google",
+          });
     }
   } catch (error: any) {
     console.error(error.message);
@@ -473,24 +493,57 @@ usersRouter.put(
   async (req: Request, res: Response) => {
     const id = req?.params?.id;
     try {
-      const informationUpdate: UsersInformationUpdateModel =
-        req.body as UsersInformationUpdateModel;
+      let {
+        password_confirm,
+        ...informationUpdate
+      }: UsersInformationUpdateModel = req.body as UsersInformationUpdateModel;
       const query = { _id: new ObjectId(id) };
-      const resultUpdateInformation = await collections.users!.updateOne(
-        query,
-        {
-          $set: informationUpdate,
-        }
-      );
-      resultUpdateInformation
-        ? res.status(200).send({
-            status: "success",
-            data: "Successfully updated personal information",
-          })
-        : res.status(304).send({
+      if (isEmpty(informationUpdate.username)) {
+        const resultUpdateInformation = await collections.users!.updateOne(
+          query,
+          {
+            $set: informationUpdate,
+          }
+        );
+        resultUpdateInformation
+          ? res.status(200).send({
+              status: "success",
+              data: "Successfully updated personal information",
+            })
+          : res.status(200).send({
+              status: "error",
+              data: "Personal information not updated",
+            });
+      } else {
+        const resultUser = (await collections.users!.findOne({
+          $or: [{ username: informationUpdate.username }],
+        })) as unknown as UsersModel;
+        if (isEmpty(resultUser)) {
+          informationUpdate.password = toString(
+            await bcrypt.hash(toString(informationUpdate.password), 14)
+          );
+          const resultUpdateInformation = await collections.users!.updateOne(
+            query,
+            {
+              $set: informationUpdate,
+            }
+          );
+          resultUpdateInformation
+            ? res.status(200).send({
+                status: "success",
+                data: "Successfully updated personal information",
+              })
+            : res.status(200).send({
+                status: "error",
+                data: "Personal information not updated",
+              });
+        } else {
+          res.status(200).send({
             status: "error",
-            data: "Personal information not updated",
+            data: "Username already existed",
           });
+        }
+      }
     } catch (error: any) {
       console.error(error.message);
       res.status(400).send(error.message);
