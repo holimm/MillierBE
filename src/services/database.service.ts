@@ -9,6 +9,7 @@ export const collections: {
   products?: mongoDB.Collection;
   productsdetail?: mongoDB.Collection;
   category?: mongoDB.Collection;
+  blogs?: mongoDB.Collection;
 } = {};
 // Initialize Connection
 export const connectToDatabase = async () => {
@@ -24,11 +25,13 @@ export const connectToDatabase = async () => {
   const categoryCollection: mongoDB.Collection = db.collection("category");
   const productsDetailCollection: mongoDB.Collection =
     db.collection("productsdetail");
+  const blogsCollection: mongoDB.Collection = db.collection("blogs");
   collections.users = usersCollection;
   collections.orders = ordersCollection;
   collections.products = productsCollection;
   collections.productsdetail = productsDetailCollection;
   collections.category = categoryCollection;
+  collections.blogs = blogsCollection;
 
   console.log(`Successfully connected to database: ${db.databaseName}`);
 };

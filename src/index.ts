@@ -9,6 +9,7 @@ import { productsDetailRouter } from "./routes/productsdetail.router";
 import { categoryRouter } from "./routes/category.router";
 import { ordersRouter } from "./routes/orders.router";
 import { emailRouter } from "./routes/email.router";
+import { blogsRouter } from "./routes/blogs.router";
 
 const app = express();
 const cors = require("cors");
@@ -30,6 +31,7 @@ connectToDatabase()
     app.use("/api/category", categoryRouter);
     app.use("/api/productsDetail", productsDetailRouter);
     app.use("/api/email", emailRouter);
+    app.use("/api/blogs", blogsRouter);
     app.use(bodyParser.json());
     app.use(cors());
     app.use(express.static("public"));
