@@ -24,7 +24,7 @@ productsDetailRouter.get("/:id", async (req: Request, res: Response) => {
     const query = { _id: new ObjectId(id) };
     const result = (await collections.productsdetail!.findOne(
       query
-    )) as unknown as ProductsDetailModel[];
+    )) as unknown as ProductsDetailModel;
 
     if (result) {
       res.status(200).send({
