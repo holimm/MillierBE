@@ -21,17 +21,19 @@ const transporter = nodemailer.createTransport({
 const message = {
   from: "forecommercetest@gmail.com",
   to: "kahn12345678@gmail.com",
-  subject: "Millier Email Verification",
-  text: `Hello, Thank you for signing up with our service!<br> 
-  To complete your registration, please verify your email address by clicking the link below:<br>
-  Verification Link: http://localhost:3034/verify-email<br>
-  If you did not sign up for our service, you can safely ignore this email.<br>
+  subject: "Thank You for Contacting Millier",
+  text: `Dear [User],<br> 
+  Thank you for reaching out to us! We appreciate you taking the time to contact [Company Name] and we're excited to assist you with your inquiry.<br>
+  Our team has received your message and we will review it promptly. One of our representatives will get back to you as soon as possible, typically within 1-2 business days.<br>
+  In the meantime, if you have any urgent concerns or questions, please feel free to contact us directly at [Contact Number] or reply to this email.<br>
+  Once again, thank you for choosing [Company Name]. We look forward to serving you!<br>
   Best regards,<br>Millier`,
   html: `
-  <p>Hello,</p>
-  <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
-  <p><a href="http://localhost:3034/verify-email">Verification Link</a></p>
-  <p>If you did not sign up for our service, you can safely ignore this email.</p>
+  <p>Dear [User],</p>
+  <p>Thank you for reaching out to us! We appreciate you taking the time to contact [Company Name] and we're excited to assist you with your inquiry.</p>
+  <p>Our team has received your message and we will review it promptly. One of our representatives will get back to you as soon as possible, typically within 1-2 business days.</p>
+  <p>In the meantime, if you have any urgent concerns or questions, please feel free to contact us directly at [Contact Number] or reply to this email.</p>
+  <p>Once again, thank you for choosing [Company Name]. We look forward to serving you!</p>
   <p>Best regards,<br>Millier</p>`,
 };
 
