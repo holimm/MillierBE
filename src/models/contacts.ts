@@ -3,6 +3,7 @@ export class ContactNodeModel {
     public email?: string,
     public fullname?: string,
     public subject?: string,
-    public content?: string
+    public content?: string,
+    public date?: string
   ) {}
 }

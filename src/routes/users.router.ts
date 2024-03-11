@@ -25,8 +25,6 @@ usersRouter.get("/", async (req: Request, res: Response) => {
     const result = (await collections
       .users!.find({ username: req.query.username })
       .toArray()) as unknown as UsersModel[];
-
-    console.log(result);
     res.status(200).send(result);
   } catch (error: any) {
     res.status(500).send(error.message);
@@ -48,7 +46,6 @@ usersRouter.get("/sessionSignIn", async (req: Request, res: Response) => {
     }
     // res.status(200).send("Test");
   } catch (error: any) {
-    console.log(error);
     res.status(500).send(error.message);
   }
 });
@@ -394,7 +391,6 @@ usersRouter.post("/googleLogin", async (req: Request, res: Response) => {
     const resultUser = (await collections.users!.findOne(
       query
     )) as unknown as UsersModel;
-    console.group(resultUser);
     if (!isEmpty(resultUser)) {
       resultUser
         ? res.status(200).send({

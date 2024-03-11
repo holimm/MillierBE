@@ -40,7 +40,6 @@ const message = {
 // GET
 emailRouter.get("/sendEmail", async (req: Request, res: Response) => {
   try {
-    console.log("RECEIVED");
     const info = await transporter.sendMail(message);
     res.status(200).send(info);
   } catch (error: any) {

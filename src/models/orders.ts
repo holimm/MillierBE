@@ -3,9 +3,10 @@ import { ProductColorType, ProductStorageType } from "./products";
 
 export class OrderInformationType {
   constructor(
-    public id?: ObjectId,
+    public _id?: ObjectId,
     public accountID?: string,
     public name?: string,
+    public email?: string,
     public method?: string,
     public address?: CheckoutFormAddressType,
     public product?: CartType[],

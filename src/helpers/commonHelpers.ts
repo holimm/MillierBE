@@ -5,3 +5,13 @@ export const generateUUIDToken = () => {
     return v.toString(16);
   });
 };
+
+export const NumberToDollarFormat = (number: number | undefined) => {
+  let usd;
+  if (number !== undefined)
+    usd = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(number);
+  return usd;
+};
