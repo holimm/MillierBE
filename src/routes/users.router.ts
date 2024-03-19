@@ -145,14 +145,14 @@ usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
         subject: "Millier Email Verification",
         text: `Hello, Thank you for signing up with our service!<br> 
         To complete your registration, please verify your email address by clicking the link below:<br>
-        Verification Link: http://localhost:3034/verify-email?token=${generateToken}<br>
+        Verification Link: ${process.env.FRONT_END_URL}/verify-email?token=${generateToken}<br>
         The email verification link will expire in 1 hour<br>
         If you did not sign up for our service, you can safely ignore this email.<br>
         Best regards,<br>Millier`,
         html: `
         <p>Hello,</p>
         <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
-        <p><a href="http://localhost:3034/verify-email?token=${generateToken}">Verification Link</a></p>
+        <p><a href="${process.env.FRONT_END_URL}/verify-email?token=${generateToken}">Verification Link</a></p>
         <p>The email verification link will expire in 1 hour.</p>
         <p>If you did not sign up for our service, you can safely ignore this email.</p>
         <p>Best regards,<br>Millier</p>`,
@@ -188,14 +188,14 @@ usersRouter.post("/createUserAccount", async (req: Request, res: Response) => {
             subject: "Millier Email Verification",
             text: `Hello, Thank you for signing up with our service!<br> 
             To complete your registration, please verify your email address by clicking the link below:<br>
-            Verification Link: http://localhost:3034/verify-email?token=${generateToken}<br>
+            Verification Link: ${process.env.FRONT_END_URL}/verify-email?token=${generateToken}<br>
             The email verification link will expire in 1 hour<br>
             If you did not sign up for our service, you can safely ignore this email.<br>
             Best regards,<br>Millier`,
             html: `
             <p>Hello,</p>
             <p>Thank you for signing up with our service! To complete your registration, please verify your email address by clicking the link below:</p>
-            <p><a href="http://localhost:3034/verify-email?token=${generateToken}">Verification Link</a></p>
+            <p><a href="${process.env.FRONT_END_URL}/verify-email?token=${generateToken}">Verification Link</a></p>
             <p>The email verification link will expire in 1 hour.</p>
             <p>If you did not sign up for our service, you can safely ignore this email.</p>
             <p>Best regards,<br>Millier</p>`,
@@ -257,13 +257,13 @@ usersRouter.post(
               to: accountData.email,
               subject: "Reset Your Millier Account Password",
               text: `We noticed that you've requested to reset your account password.<br> 
-        Your reset password link: http://localhost:3034/reset-password?token=${generateToken}<br>
+        Your reset password link: ${process.env.FRONT_END_URL}/reset-password?token=${generateToken}<br>
         If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.<br>
         For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.<br>
         Thank you,<br>Millier`,
               html: `
         <p>We noticed that you've requested to reset your account password.</p>
-        <p><a href="http://localhost:3034/reset-password?token=${generateToken}">Reset Password Link</a></p>
+        <p><a href="${process.env.FRONT_END_URL}/reset-password?token=${generateToken}">Reset Password Link</a></p>
         <p>If you didn't request this password reset, please disregard this email. Your account remains secure, and no changes have been made.</p>
         <p>For security reasons, the password reset link will expire in 1 hour. If you don't reset your password within this timeframe, you'll need to request another password reset.</p>
         <p>Thank you,<br>Millier</p>`,
