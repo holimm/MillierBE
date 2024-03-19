@@ -2,15 +2,12 @@
 import express, { Request, Response } from "express";
 import nodemailer from "nodemailer";
 
-const TEST_PASSWORD = "slpy rnyd zfxn prmy";
-const CLIENT = "kahn12345678@gmail.com";
-
 const transporter = nodemailer.createTransport({
   service: "gmail",
   port: 587,
   auth: {
     user: process.env.EMAIL_FROM,
-    pass: TEST_PASSWORD,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 

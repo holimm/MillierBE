@@ -8,7 +8,6 @@ import { productsRouter } from "./routes/products.router";
 import { productsDetailRouter } from "./routes/productsdetail.router";
 import { categoryRouter } from "./routes/category.router";
 import { ordersRouter } from "./routes/orders.router";
-import { emailRouter } from "./routes/email.router";
 import { blogsRouter } from "./routes/blogs.router";
 import { contactsRouter } from "./routes/contacts.router";
 
@@ -31,7 +30,6 @@ connectToDatabase()
     app.use("/api/products", productsRouter);
     app.use("/api/category", categoryRouter);
     app.use("/api/productsDetail", productsDetailRouter);
-    app.use("/api/email", emailRouter);
     app.use("/api/blogs", blogsRouter);
     app.use("/api/contacts", contactsRouter);
     app.use(bodyParser.json());
