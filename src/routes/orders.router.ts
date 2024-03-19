@@ -75,9 +75,11 @@ ordersRouter.post("/create", async (req: Request, res: Response) => {
         }, Ward ${checkoutInformationData.address?.ward}, District ${
           checkoutInformationData.address?.district
         }, ${checkoutInformationData.address?.city}<br>
-        <b>Track your order:</b> http://localhost:3034/track-order?code=${
-          resultCreateOrder.insertedId
-        }&email=${checkoutInformationData.email}<br>
+        <b>Track your order:</b> ${
+          process.env.FRONT_END_URL
+        }/track-order?code=${resultCreateOrder.insertedId}&email=${
+          checkoutInformationData.email
+        }<br>
           Thank you for choosing Millier for your purchase. We appreciate your business and look forward to serving you again in the future!<br>
           Best regards,<br>Millier`,
         html: `
@@ -98,9 +100,9 @@ ordersRouter.post("/create", async (req: Request, res: Response) => {
         }, District ${checkoutInformationData.address?.district}, ${
           checkoutInformationData.address?.city
         }</p>
-          <p><a href="http://localhost:3034/track-order?code=${
-            resultCreateOrder.insertedId
-          }&email=${checkoutInformationData.email}">Track Order Link</a></p>
+          <p><a href="${process.env.FRONT_END_URL}/track-order?code=${
+          resultCreateOrder.insertedId
+        }&email=${checkoutInformationData.email}">Track Order Link</a></p>
           <p>Thank you for choosing Millier for your purchase. We appreciate your business and look forward to serving you again in the future!</p>
           <p>Best regards,<br>Millier</p>`,
       });
