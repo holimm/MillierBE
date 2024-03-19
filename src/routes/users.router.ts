@@ -56,19 +56,28 @@ usersRouter.post("/signin", async (req: Request, res: Response) => {
       username: req.body.username,
     })) as unknown as UsersModel;
     if (!isEmpty(resultUser)) {
-      bcrypt.compare(req.body.password, resultUser.password).then((result) => {
-        if (result) {
-          res.status(200).send({
-            status: "success",
-            data: { ...resultUser, remember: req.body.remember },
+      if (resultUser.statusVerify) {
+        bcrypt
+          .compare(req.body.password, resultUser.password)
+          .then((result) => {
+            if (result) {
+              res.status(200).send({
+                status: "success",
+                data: { ...resultUser, remember: req.body.remember },
+              });
+            } else {
+              res.status(200).send({
+                status: "error",
+                data: "Wrong username or password",
+              });
+            }
           });
-        } else {
-          res.status(200).send({
-            status: "error",
-            data: "Wrong username or password",
-          });
-        }
-      });
+      } else {
+        res.status(200).send({
+          status: "error",
+          data: "User not verified",
+        });
+      }
     } else {
       res.status(200).send({
         status: "error",
