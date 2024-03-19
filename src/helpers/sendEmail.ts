@@ -2,7 +2,6 @@
 import express, { Request, Response } from "express";
 import nodemailer from "nodemailer";
 
-const TEST_EMAIL = "forecommercetest@gmail.com";
 const TEST_PASSWORD = "slpy rnyd zfxn prmy";
 const CLIENT = "kahn12345678@gmail.com";
 
@@ -10,7 +9,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   port: 587,
   auth: {
-    user: TEST_EMAIL,
+    user: process.env.EMAIL_FROM,
     pass: TEST_PASSWORD,
   },
 });
@@ -23,7 +22,7 @@ export const sendEmailRegisterAccount = async (data: {
 }) => {
   try {
     const message = {
-      from: TEST_EMAIL,
+      from: process.env.EMAIL_FROM,
       to: data.to,
       subject: data.subject,
       text: data.text,
