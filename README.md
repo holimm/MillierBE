@@ -1,7 +1,7 @@
 # Millier Store Back-end 🎶
 
 ## ❓ What's this app about
-Millier Store is a back-end for Millier Store. Currently hosting on Vietnix using the "Hosting Cheap 2" pack and MongoDB for data storage.
+Millier Store BE is a back-end for Millier Store. Currently hosting on Vietnix using the "Hosting Cheap 2" pack and MongoDB for data storage.
 
 ## 🔧 Tools
 <li><a href="https://nodejs.org/en">NodeJS</a></li>
